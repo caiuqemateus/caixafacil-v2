@@ -796,4 +796,4 @@ if (savedView && savedView !== 'opening') switchView(savedView);
 window.setTimeout(() => {
   els.launchScreen.classList.add('is-hidden');
   els.launchScreen.setAttribute('aria-hidden', 'true');
-}, 650);
+}, 2000);
