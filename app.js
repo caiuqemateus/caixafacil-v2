@@ -33,7 +33,6 @@ const els = {
   themeButton: document.querySelector('#theme-button'),
   openingView: document.querySelector('#opening-view'),
   closingView: document.querySelector('#closing-view'),
-  topbarContext: document.querySelector('#topbar-context'),
   billsList: document.querySelector('#bills-list'),
   coinsList: document.querySelector('#coins-list'),
   billsTotal: document.querySelector('#bills-total'),
@@ -242,6 +241,10 @@ function updateSubtotals(prefix, state) {
   });
 }
 
+function setIcon(element, name) {
+  element.querySelector('use').setAttribute('href', `./icons.svg#icon-${name}`);
+}
+
 function updateOpeningCalculations() {
   const billsTotal = sumType(openingState, 'bills');
   const coinsTotal = sumType(openingState, 'coins');
@@ -259,7 +262,7 @@ function updateOpeningCalculations() {
   els.statusBox.classList.remove('below', 'exact', 'above');
   if (difference < 0) {
     els.statusBox.classList.add('below');
-    els.statusIcon.textContent = '!';
+    setIcon(els.statusIcon, 'alert');
     els.statusKicker.textContent = 'Abaixo da meta';
     els.statusTitle.textContent = 'Ainda não pode operar';
     els.statusDetail.textContent = `Faltam ${formatBRL(Math.abs(difference))} para chegar ao fundo inicial.`;
@@ -267,7 +270,7 @@ function updateOpeningCalculations() {
     els.differenceValue.textContent = formatBRL(Math.abs(difference));
   } else if (difference === 0) {
     els.statusBox.classList.add('exact');
-    els.statusIcon.textContent = '✓';
+    setIcon(els.statusIcon, 'check');
     els.statusKicker.textContent = 'Meta atingida';
     els.statusTitle.textContent = 'Pode operar';
     els.statusDetail.textContent = `O fundo inicial está certinho em ${formatBRL(targetCents)}.`;
@@ -275,7 +278,7 @@ function updateOpeningCalculations() {
     els.differenceValue.textContent = 'R$ 0,00';
   } else {
     els.statusBox.classList.add('above');
-    els.statusIcon.textContent = '↑';
+    setIcon(els.statusIcon, 'trend-up');
     els.statusKicker.textContent = 'Acima da meta';
     els.statusTitle.textContent = 'Pode operar';
     els.statusDetail.textContent = `Tem ${formatBRL(difference)} a mais que o fundo inicial.`;
@@ -298,7 +301,7 @@ function updateClosingCalculations() {
   els.closingStatusBox.classList.remove('neutral', 'below', 'exact', 'above');
   if (pdvCents === 0) {
     els.closingStatusBox.classList.add('neutral');
-    els.closingStatusIcon.textContent = '?';
+    setIcon(els.closingStatusIcon, 'help');
     els.closingStatusKicker.textContent = 'Informe o PDV';
     els.closingStatusTitle.textContent = 'Digite o valor do PDV';
     els.closingStatusDetail.textContent = 'Assim você compara o dinheiro contado com o sistema.';
@@ -306,7 +309,7 @@ function updateClosingCalculations() {
     els.closingDifferenceValue.textContent = '—';
   } else if (difference < 0) {
     els.closingStatusBox.classList.add('below');
-    els.closingStatusIcon.textContent = '!';
+    setIcon(els.closingStatusIcon, 'alert');
     els.closingStatusKicker.textContent = 'Falta no caixa';
     els.closingStatusTitle.textContent = 'Não bateu com o PDV';
     els.closingStatusDetail.textContent = `Faltam ${formatBRL(Math.abs(difference))} em relação ao valor do sistema.`;
@@ -314,7 +317,7 @@ function updateClosingCalculations() {
     els.closingDifferenceValue.textContent = formatBRL(Math.abs(difference));
   } else if (difference === 0) {
     els.closingStatusBox.classList.add('exact');
-    els.closingStatusIcon.textContent = '✓';
+    setIcon(els.closingStatusIcon, 'check');
     els.closingStatusKicker.textContent = 'Conferência exata';
     els.closingStatusTitle.textContent = 'Bateu com o PDV';
     els.closingStatusDetail.textContent = 'O dinheiro contado está igual ao valor do sistema.';
@@ -322,7 +325,7 @@ function updateClosingCalculations() {
     els.closingDifferenceValue.textContent = 'R$ 0,00';
   } else {
     els.closingStatusBox.classList.add('above');
-    els.closingStatusIcon.textContent = '↑';
+    setIcon(els.closingStatusIcon, 'trend-up');
     els.closingStatusKicker.textContent = 'Sobra no caixa';
     els.closingStatusTitle.textContent = 'Não bateu com o PDV';
     els.closingStatusDetail.textContent = `Sobram ${formatBRL(difference)} em relação ao valor do sistema.`;
@@ -672,15 +675,13 @@ function clearClosingCount() {
 }
 
 function switchView(viewName) {
-  const titles = { opening: 'Conferência de abertura', closing: 'Conferência de fechamento', extras: 'Ferramentas do caixa' };
-  if (!titles[viewName]) viewName = 'opening';
+  if (!['opening', 'closing', 'extras'].includes(viewName)) viewName = 'opening';
   document.querySelectorAll('.view-panel').forEach((panel) => {
     const on = panel.id === `${viewName}-view`;
     panel.hidden = !on;
     panel.classList.toggle('active', on);
   });
   els.quickExtrasButton.hidden = !quickModeEnabled || viewName === 'extras';
-  els.topbarContext.textContent = titles[viewName];
   els.modeButtons.forEach((button) => {
     const selected = button.dataset.view === viewName;
     button.classList.toggle('active', selected);
@@ -695,7 +696,7 @@ function updateThemeButton(theme) {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   els.themeButton.setAttribute('aria-pressed', String(dark));
   els.themeButton.setAttribute('aria-label', dark ? 'Ativar modo claro' : 'Ativar modo escuro');
-  els.themeButton.querySelector('.theme-icon').textContent = dark ? '☀' : '☾';
+  setIcon(els.themeButton.querySelector('.theme-icon'), dark ? 'sun' : 'moon');
   els.themeButton.querySelector('.theme-label').textContent = dark ? 'Claro' : 'Escuro';
   document.querySelector('meta[name="theme-color"]').content = dark ? '#14211f' : '#0f766e';
 }

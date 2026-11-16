@@ -62,7 +62,6 @@
 body.quick-count-mode .intro,
 body.quick-count-mode .how-to,
 body.quick-count-mode .footer,
-body.quick-count-mode .topbar-note,
 body.quick-count-mode .install-button,
 body.quick-count-mode .theme-button { display: none; }
 body.quick-count-mode .quick-extras-button { display: inline-flex; align-items: center; justify-content: center; }
@@ -82,8 +81,6 @@ body.quick-count-mode .summary-card {
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 15px;
 }
-body.quick-count-mode .summary-card::before,
-body.quick-count-mode .summary-card::after,
 body.quick-count-mode .summary-card-top,
 body.quick-count-mode .summary-card h2,
 body.quick-count-mode .progress-area,

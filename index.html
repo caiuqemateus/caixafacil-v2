@@ -18,32 +18,28 @@
       } catch {}
     </script>
     <title>Caixa Fácil · Abertura e fechamento</title>
-    <link rel="stylesheet" href="styles.css?v=14" />
-    <link rel="stylesheet" href="extras.css?v=17" />
+    <link rel="stylesheet" href="styles.css?v=16" />
+    <link rel="stylesheet" href="extras.css?v=18" />
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="./" aria-label="Caixa Fácil, início">
-        <span class="brand-mark" aria-hidden="true"><span>R$</span></span>
+        <span class="brand-mark" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-wallet"></use></svg></span>
         <span class="brand-name">Caixa Fácil</span>
       </a>
       <nav class="mode-switch" aria-label="Escolha o momento do caixa">
-        <button class="mode-button active" type="button" data-view="opening" aria-selected="true"><span>01</span> Abertura</button>
-        <button class="mode-button" type="button" data-view="closing" aria-selected="false"><span>02</span> Fechamento</button>
+        <button class="mode-button active" type="button" data-view="opening" aria-selected="true"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-opening"></use></svg></span> Abertura</button>
+        <button class="mode-button" type="button" data-view="closing" aria-selected="false"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-closing"></use></svg></span> Fechamento</button>
       </nav>
-      <div class="topbar-note">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span id="topbar-context">Conferência de abertura</span>
-      </div>
       <button class="install-button" id="install-button" type="button">Instalar app</button>
       <button class="theme-button" id="theme-button" type="button" aria-label="Ativar modo escuro" aria-pressed="false">
-        <span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Escuro</span>
+        <svg class="theme-icon ui-icon" aria-hidden="true"><use href="./icons.svg#icon-moon"></use></svg><span class="theme-label">Escuro</span>
       </button>
       <button class="quick-extras-button" type="button" data-view="extras">Extras</button>
     </header>
     <nav class="mobile-dock" aria-label="Navegação principal">
-      <button class="mode-button active" type="button" data-view="opening" aria-selected="true"><span aria-hidden="true">▦</span> Abertura</button>
-      <button class="mode-button" type="button" data-view="closing" aria-selected="false"><span aria-hidden="true">✓</span> Fechamento</button>
+      <button class="mode-button active" type="button" data-view="opening" aria-selected="true"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-opening"></use></svg></span> Abertura</button>
+      <button class="mode-button" type="button" data-view="closing" aria-selected="false"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-closing"></use></svg></span> Fechamento</button>
     </nav>
 
     <main>
@@ -72,7 +68,7 @@
 
             <div class="money-group">
               <div class="group-heading">
-                <div class="group-icon bills-icon" aria-hidden="true">▤</div>
+                <div class="group-icon bills-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-bills"></use></svg></div>
                 <div>
                   <h3>Cédulas</h3>
                   <p>Notas de dinheiro</p>
@@ -84,7 +80,7 @@
 
             <div class="money-group">
               <div class="group-heading">
-                <div class="group-icon coins-icon" aria-hidden="true">◉</div>
+                <div class="group-icon coins-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-coins"></use></svg></div>
                 <div>
                   <h3>Moedas</h3>
                   <p>Moedas do dia a dia</p>
@@ -112,7 +108,7 @@
             </div>
 
             <div class="status-box below" id="status-box" role="status" aria-live="polite">
-              <span class="status-icon" id="status-icon" aria-hidden="true">!</span>
+              <span class="status-icon" id="status-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-alert"></use></svg></span>
               <div>
                 <p class="status-kicker" id="status-kicker">Abaixo da meta</p>
                 <strong id="status-title">Ainda não pode operar</strong>
@@ -126,9 +122,9 @@
             </div>
 
             <button class="clear-button" id="clear-button" type="button">
-              <span aria-hidden="true">↺</span> Limpar contagem
+              <span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-refresh"></use></svg></span> Limpar contagem
             </button>
-            <p class="privacy-note"><span aria-hidden="true">⌁</span> Sua contagem fica salva somente neste aparelho.</p>
+            <p class="privacy-note"><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-lock"></use></svg> Sua contagem fica salva somente neste aparelho.</p>
           </aside>
         </section>
 
@@ -170,7 +166,7 @@
 
             <div class="money-group">
               <div class="group-heading">
-                <div class="group-icon bills-icon" aria-hidden="true">▤</div>
+                <div class="group-icon bills-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-bills"></use></svg></div>
                 <div>
                   <h3>Cédulas</h3>
                   <p>Notas encontradas no fechamento</p>
@@ -182,7 +178,7 @@
 
             <div class="money-group">
               <div class="group-heading">
-                <div class="group-icon coins-icon" aria-hidden="true">◉</div>
+                <div class="group-icon coins-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-coins"></use></svg></div>
                 <div>
                   <h3>Moedas</h3>
                   <p>Moedas encontradas no fechamento</p>
@@ -213,7 +209,7 @@
             </div>
 
             <div class="status-box neutral" id="closing-status-box" role="status" aria-live="polite">
-              <span class="status-icon" id="closing-status-icon" aria-hidden="true">?</span>
+              <span class="status-icon" id="closing-status-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-help"></use></svg></span>
               <div>
                 <p class="status-kicker" id="closing-status-kicker">Informe o PDV</p>
                 <strong id="closing-status-title">Digite o valor do PDV</strong>
@@ -243,15 +239,15 @@
             </section>
 
             <div class="closing-actions" aria-label="Ações do fechamento">
-              <button class="primary-action" id="record-closing-button" type="button"><span aria-hidden="true">✓</span> Registrar fechamento</button>
-              <button class="secondary-action" id="copy-summary-button" type="button"><span aria-hidden="true">▣</span> Copiar resumo</button>
+              <button class="primary-action" id="record-closing-button" type="button"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-check"></use></svg></span> Registrar fechamento</button>
+              <button class="secondary-action" id="copy-summary-button" type="button"><span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-copy"></use></svg></span> Copiar resumo</button>
             </div>
             <p class="action-feedback" id="action-feedback" role="status" aria-live="polite"></p>
 
             <button class="clear-button" id="clear-closing-button" type="button">
-              <span aria-hidden="true">↺</span> Limpar fechamento
+              <span><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-refresh"></use></svg></span> Limpar fechamento
             </button>
-            <p class="privacy-note"><span aria-hidden="true">⌁</span> Fechamento salvo somente neste aparelho.</p>
+            <p class="privacy-note"><svg class="ui-icon" aria-hidden="true"><use href="./icons.svg#icon-lock"></use></svg> Fechamento salvo somente neste aparelho.</p>
           </aside>
         </section>
 
@@ -374,7 +370,7 @@
       <span>Criado por Sr.Reinã</span>
       <button class="footer-extras" type="button" data-view="extras">Extras</button>
     </footer>
-    <script src="app.js?v=14" defer></script>
+    <script src="app.js?v=16" defer></script>
     <script src="extras.js?v=14" defer></script>
   </body>
 </html>
