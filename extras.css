@@ -24,10 +24,169 @@
 .x-actions { display: grid; gap: 10px; }
 .x-actions .secondary-action { color: var(--ink); border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; font-weight: 600; }
 .x-add, .x-actions .secondary-action, .mode-button { touch-action: manipulation; }
+.settings-card { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 12px; }
+.settings-card h2 { margin: 0 0 5px; font-size: 22px; }
+.settings-card .x-help { margin-bottom: 0; }
+.fund-setting-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px 12px; }
+.fund-setting-form .x-label { grid-column: 1; grid-row: 1; margin: 0; }
+.fund-setting-form .x-input { grid-column: 1; grid-row: 2; margin: 0; }
+.fund-setting-form .x-add { grid-column: 2; grid-row: 2; min-width: 130px; }
+.settings-card .action-feedback { grid-column: 1 / -1; margin: 0; color: var(--teal-dark); text-align: left; }
+.settings-card .action-feedback.warning { color: var(--red); }
+.settings-card .action-feedback.success { color: var(--green); }
+.quick-extras-button { display: none; min-height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: var(--card); font-size: 11px; font-weight: 700; }
+.settings-card .currency-input,
+.extras-grid .currency-input { border-color: var(--line); background: #fbfcfa; }
+.settings-card .currency-input span,
+.extras-grid .currency-input span { color: var(--ink-soft); }
+.settings-card .currency-input input,
+.extras-grid .currency-input input { color: var(--ink); }
+.history-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.history-insight { display: flex; flex-direction: column; gap: 3px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.55); }
+.history-insight strong { font-family: 'Space Grotesk', sans-serif; font-size: 16px; }
+.history-insight span { color: var(--ink-soft); font-size: 10px; }
+.history-filter-label { margin-right: 7px; color: var(--ink-soft); font-size: 12px; }
+.history-filter { min-height: 36px; margin-bottom: 14px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: var(--card); }
+.rounding-kind { min-height: 42px; border: 0; border-radius: 10px; color: var(--ink-soft); background: transparent; font-weight: 600; }
+.rounding-kind.active { color: #fff; background: var(--teal); }
+.rounding-balance { padding: 13px; margin: 12px 0; border-radius: 12px; font-weight: 700; }
+.rounding-balance.positive { color: #145a40; background: var(--green-soft); }
+.rounding-balance.negative { color: var(--red); background: var(--red-soft); }
+.rounding-balance.balanced { color: var(--teal-dark); background: var(--teal-soft); }
+.rounding-totals span { flex: 1; }
+.quick-mode-setting { grid-column: 1 / -1; display: flex; align-items: center; gap: 11px; padding-top: 12px; border-top: 1px solid var(--line); cursor: pointer; }
+.quick-mode-setting input { width: 21px; height: 21px; margin: 0; accent-color: var(--teal); }
+.quick-mode-setting span { display: flex; flex-direction: column; }
+.quick-mode-setting strong { font-size: 13px; }
+.quick-mode-setting small { color: var(--ink-soft); font-size: 11px; }
+body.quick-count-mode .intro,
+body.quick-count-mode .how-to,
+body.quick-count-mode .footer,
+body.quick-count-mode .topbar-note,
+body.quick-count-mode .install-button,
+body.quick-count-mode .theme-button { display: none; }
+body.quick-count-mode .quick-extras-button { display: inline-flex; align-items: center; justify-content: center; }
+body.quick-count-mode .quick-extras-button[hidden] { display: none; }
+body.quick-count-mode .topbar { min-height: 58px; }
+body.quick-count-mode .workspace { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+body.quick-count-mode .summary-card {
+  position: sticky;
+  top: 82px;
+  z-index: 12;
+  order: -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 15px;
+}
+body.quick-count-mode .summary-card::before,
+body.quick-count-mode .summary-card::after,
+body.quick-count-mode .summary-card-top,
+body.quick-count-mode .summary-card h2,
+body.quick-count-mode .progress-area,
+body.quick-count-mode .difference-line,
+body.quick-count-mode .privacy-note { display: none; }
+body.quick-count-mode .summary-card .big-total { margin: 0; font-size: 25px; }
+body.quick-count-mode .summary-card .status-box {
+  min-height: 0;
+  padding: 7px 9px;
+  margin: 0;
+  border: 0;
+  border-radius: 9px;
+}
+body.quick-count-mode .status-box .status-icon,
+body.quick-count-mode .status-box .status-kicker,
+body.quick-count-mode .status-box div p:last-child { display: none; }
+body.quick-count-mode .status-box strong { margin: 0; font-size: 11px; white-space: nowrap; }
+body.quick-count-mode .summary-card .clear-button { width: 40px; min-height: 38px; padding: 0; font-size: 0; }
+body.quick-count-mode .summary-card .clear-button span { margin: 0; }
+body.quick-count-mode .action-feedback:empty { display: none; }
+body.quick-count-mode .counting-column { min-width: 0; }
+body.quick-count-mode .section-heading { display: none; }
+body.quick-count-mode .money-group { padding: 12px; margin-bottom: 8px; border-radius: 15px; }
+body.quick-count-mode .group-heading { gap: 8px; padding-bottom: 8px; }
+body.quick-count-mode .group-icon,
+body.quick-count-mode .group-heading p,
+body.quick-count-mode .denomination span,
+body.quick-count-mode .subtotal { display: none; }
+body.quick-count-mode .group-heading h3 { font-size: 15px; }
+body.quick-count-mode .group-total { font-size: 12px; }
+body.quick-count-mode .money-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding-top: 8px; }
+body.quick-count-mode .money-row {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--paper);
+}
+body.quick-count-mode .money-row:last-child,
+body.quick-count-mode .money-row:nth-last-child(2):nth-child(odd) { border-bottom: 1px solid var(--line); }
+body.quick-count-mode .denomination strong { font-size: 16px; }
+body.quick-count-mode .quantity-control { width: 100%; height: 44px; justify-content: center; border: 0; background: transparent; }
+body.quick-count-mode .step-button { width: auto; height: 42px; flex: 1; border-radius: 8px; background: var(--teal-soft); font-size: 25px; }
+body.quick-count-mode .quantity-input { width: 42px; height: 42px; border: 0; font-size: 16px; }
+body.quick-count-mode .close-summary-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; }
+body.quick-count-mode .close-summary-card .quick-pdv-field { grid-column: 2; grid-row: 1; }
+body.quick-count-mode .close-summary-card .closing-field-label { display: block; margin: 0 0 3px; font-size: 9px; white-space: nowrap; }
+body.quick-count-mode .close-summary-card .currency-input { height: 40px; margin: 0; }
+body.quick-count-mode .close-summary-card .closing-total-line { grid-column: 1; grid-row: 1; display: block; padding: 0; }
+body.quick-count-mode .close-summary-card .closing-total-line strong { display: block; font-size: 21px; }
+body.quick-count-mode .close-summary-card .status-box { display: none; }
+body.quick-count-mode .close-summary-card .difference-line {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 4px 0;
+  margin: 0;
+  border-top: 0;
+  font-size: 10px;
+}
+body.quick-count-mode .close-summary-card .reserve-panel,
+body.quick-count-mode .close-summary-card #copy-summary-button,
+body.quick-count-mode .close-summary-card .privacy-note { display: none; }
+body.quick-count-mode .close-summary-card #clear-closing-button { grid-column: 3; grid-row: 1; }
+body.quick-count-mode .close-summary-card .closing-actions { grid-column: 1 / -1; grid-row: 3; display: block; margin-top: 2px; }
+body.quick-count-mode .close-summary-card .primary-action { width: 100%; min-height: 40px; }
+body.quick-count-mode .close-summary-card .action-feedback { grid-column: 1 / -1; grid-row: 4; }
+body.quick-count-mode .close-summary-card .action-feedback:empty { display: none; }
+:root[data-theme="dark"] body.quick-count-mode .money-row { background: #15211f; }
+:root[data-theme="dark"] .settings-card .currency-input,
+:root[data-theme="dark"] .extras-grid .currency-input,
+:root[data-theme="dark"] .history-insight { background: #15211f; }
+:root[data-theme="dark"] .settings-card .currency-input input,
+:root[data-theme="dark"] .extras-grid .currency-input input { color: var(--ink); }
+:root[data-theme="dark"] .rounding-kind.active { color: #10211d; }
+:root[data-theme="dark"] .rounding-balance.positive,
+:root[data-theme="dark"] .settings-card .action-feedback.success { color: #a9e3be; }
+:root[data-theme="dark"] .rounding-balance.negative,
+:root[data-theme="dark"] .settings-card .action-feedback.warning { color: #f0a69c; }
+:root[data-theme="dark"] .rounding-balance.balanced { color: #9de0d1; }
 @media (max-width: 660px) {
   .mode-switch { gap: 2px; }
   .mode-button { padding-inline: 9px; font-size: 13px; }
   .mode-button span { display: none; }
+  .settings-card { grid-template-columns: 1fr; align-items: stretch; }
+  .fund-setting-form { grid-template-columns: minmax(0, 1fr) 120px; gap: 6px 8px; }
+  .fund-setting-form .x-add { min-width: 0; }
+  .settings-card .action-feedback { grid-column: auto; }
+  .history-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.quick-count-mode .topbar { min-height: 52px; }
+  body.quick-count-mode .summary-card { top: 60px; grid-template-columns: minmax(0, 1fr) auto; }
+  body.quick-count-mode .summary-card:not(.close-summary-card) .status-box { grid-column: 1; grid-row: 2; justify-self: start; }
+  body.quick-count-mode .summary-card:not(.close-summary-card) .clear-button { grid-column: 2; grid-row: 1 / 3; }
+  body.quick-count-mode .money-row { padding: 8px; }
+  body.quick-count-mode .denomination strong { font-size: 14px; }
+  body.quick-count-mode .quantity-input { width: 36px; }
+  body.quick-count-mode .close-summary-card #clear-closing-button { min-height: 34px; margin-top: 1px; }
 }
 @supports (padding: env(safe-area-inset-bottom)) { .footer { padding-bottom: calc(18px + env(safe-area-inset-bottom)); } }
 

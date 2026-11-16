@@ -1,9 +1,12 @@
-const TARGET_CENTS = 20000;
+const DEFAULT_TARGET_CENTS = 20000;
+const MAX_TARGET_CENTS = 1000000;
 const OPENING_STORAGE_KEY = 'caixa-facil-counts-v1';
 const CLOSING_STORAGE_KEY = 'caixa-facil-closing-v1';
 const HISTORY_STORAGE_KEY = 'caixa-facil-history-v1';
 const ACTIVE_VIEW_KEY = 'caixa-facil-active-view-v1';
 const THEME_STORAGE_KEY = 'caixa-facil-theme-v1';
+const SETTINGS_STORAGE_KEY = 'caixa-facil-settings-v1';
+const QUICK_MODE_STORAGE_KEY = 'caixa-facil-quick-mode-v1';
 
 const denominations = {
   bills: [20000, 10000, 5000, 2000, 1000, 500, 200],
@@ -22,6 +25,8 @@ const closingState = createCountState();
 let pdvCents = 0;
 let closingHistory = [];
 let installPromptEvent = null;
+let targetCents = DEFAULT_TARGET_CENTS;
+let quickModeEnabled = false;
 
 const els = {
   modeButtons: document.querySelectorAll('.mode-button'),
@@ -72,6 +77,10 @@ const els = {
   historyList: document.querySelector('#history-list'),
   historyEmpty: document.querySelector('#history-empty'),
   clearHistoryButton: document.querySelector('#clear-history-button'),
+  historyFilter: document.querySelector('#history-filter'),
+  historyInsights: document.querySelector('#history-insights'),
+  quickModeToggle: document.querySelector('#quick-mode-toggle'),
+  quickExtrasButton: document.querySelector('.quick-extras-button'),
 };
 
 function formatBRL(cents) {
@@ -80,6 +89,40 @@ function formatBRL(cents) {
 
 function formatInputMoney(cents) {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
+}
+
+function updateTargetLabels() {
+  const formattedTarget = formatBRL(targetCents);
+  document.querySelector('#opening-goal-tag').setAttribute('aria-label', `Meta do fundo inicial: ${formattedTarget}`);
+  document.querySelector('#opening-goal-value').textContent = formattedTarget;
+  document.querySelector('#opening-progress-area').setAttribute('aria-label', `Progresso até a meta de ${formattedTarget}`);
+  document.querySelector('#closing-goal-tag').setAttribute('aria-label', `Valor para deixar para o próximo operador: ${formattedTarget}`);
+  document.querySelector('#closing-goal-value').textContent = formattedTarget;
+  document.querySelector('#reserve-title').textContent = `Separe ${formattedTarget}`;
+}
+
+function loadTargetSetting() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || 'null');
+    if (Number.isSafeInteger(saved?.targetCents) && saved.targetCents > 0 && saved.targetCents <= MAX_TARGET_CENTS) {
+      targetCents = saved.targetCents;
+    }
+  } catch {
+    targetCents = DEFAULT_TARGET_CENTS;
+  }
+}
+
+function setQuickMode(enabled, persist = true) {
+  quickModeEnabled = enabled;
+  document.body.classList.toggle('quick-count-mode', enabled);
+  els.quickModeToggle.checked = enabled;
+  els.quickExtrasButton.hidden = !enabled || document.querySelector('#extras-view').classList.contains('active');
+  if (!persist) return;
+  try {
+    localStorage.setItem(QUICK_MODE_STORAGE_KEY, String(enabled));
+  } catch {
+    els.quickModeToggle.title = 'A preferência não pôde ser salva neste aparelho.';
+  }
 }
 
 function denominationLabel(cents) {
@@ -149,6 +192,14 @@ function buildMoneyRow({ type, value, state, prefix, onChange }) {
   input.addEventListener('blur', () => {
     input.value = String(readCount(state, type, value));
   });
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const inputs = [...document.querySelectorAll(`.money-row[data-prefix="${prefix}"] .quantity-input`)];
+    const nextInput = inputs[inputs.indexOf(input) + 1];
+    if (nextInput) nextInput.focus();
+    else if (prefix === 'closing') els.pdvInput.focus();
+  });
   minus.addEventListener('click', () => changeCount({ type, value, state, delta: -1, input, onChange }));
   plus.addEventListener('click', () => changeCount({ type, value, state, delta: 1, input, onChange }));
   return row;
@@ -195,8 +246,8 @@ function updateOpeningCalculations() {
   const billsTotal = sumType(openingState, 'bills');
   const coinsTotal = sumType(openingState, 'coins');
   const total = billsTotal + coinsTotal;
-  const difference = total - TARGET_CENTS;
-  const progress = Math.min(100, Math.max(0, (total / TARGET_CENTS) * 100));
+  const difference = total - targetCents;
+  const progress = Math.min(100, Math.max(0, (total / targetCents) * 100));
 
   els.billsTotal.textContent = formatBRL(billsTotal);
   els.coinsTotal.textContent = formatBRL(coinsTotal);
@@ -219,7 +270,7 @@ function updateOpeningCalculations() {
     els.statusIcon.textContent = '✓';
     els.statusKicker.textContent = 'Meta atingida';
     els.statusTitle.textContent = 'Pode operar';
-    els.statusDetail.textContent = 'O fundo inicial está certinho em R$ 200,00.';
+    els.statusDetail.textContent = `O fundo inicial está certinho em ${formatBRL(targetCents)}.`;
     els.differenceLabel.textContent = 'Diferença da meta';
     els.differenceValue.textContent = 'R$ 0,00';
   } else {
@@ -282,67 +333,61 @@ function updateClosingCalculations() {
   updateReserveSuggestion(total);
 }
 
-function gcd(a, b) {
-  let first = Math.abs(a);
-  let second = Math.abs(b);
-  while (second) [first, second] = [second, first % second];
-  return first;
-}
-
 function findReserveCombination(state) {
   const options = [
     ...denominations.bills.map((value) => ({ type: 'bills', value })),
     ...denominations.coins.map((value) => ({ type: 'coins', value })),
   ];
-  const maxAvailable = options.map(({ type, value }) => Math.min(readCount(state, type, value), Math.floor(TARGET_CENTS / value)));
-  const suffixMax = Array(options.length + 1).fill(0);
-  const suffixGcd = Array(options.length + 1).fill(0);
+  const maxAvailable = options.map(({ type, value }) => Math.min(readCount(state, type, value), Math.floor(targetCents / value)));
+  const suffixReachable = Array(options.length + 1);
+  suffixReachable[options.length] = new Uint8Array(targetCents + 1);
+  suffixReachable[options.length][0] = 1;
 
   for (let index = options.length - 1; index >= 0; index -= 1) {
-    suffixMax[index] = suffixMax[index + 1] + (maxAvailable[index] * options[index].value);
-    suffixGcd[index] = gcd(options[index].value, suffixGcd[index + 1]);
+    const { value } = options[index];
+    const available = maxAvailable[index];
+    const next = suffixReachable[index + 1];
+    const reachable = new Uint8Array(targetCents + 1);
+
+    for (let remainder = 0; remainder < value && remainder <= targetCents; remainder += 1) {
+      const queue = [];
+      let head = 0;
+      for (let unit = 0, amount = remainder; amount <= targetCents; unit += 1, amount += value) {
+        if (next[amount]) queue.push(unit);
+        while (head < queue.length && queue[head] < unit - available) head += 1;
+        if (head < queue.length) reachable[amount] = 1;
+      }
+    }
+    suffixReachable[index] = reachable;
   }
 
-  let best = null;
-  const used = Array(options.length).fill(0);
+  if (!suffixReachable[0][targetCents]) return null;
 
-  function search(index, remaining, pieces) {
-    if (remaining === 0) {
-      // Os valores estão em ordem do maior para o menor. Como percorremos
-      // cada quantidade começando em zero, a primeira solução encontrada é a
-      // que usa o mínimo possível de notas altas e deixa mais troco miúdo.
-      best = { pieces, counts: [...used] };
-      return true;
-    }
-    if (index >= options.length || remaining < 0 || remaining > suffixMax[index]) return false;
-    if (suffixGcd[index] === 0 || remaining % suffixGcd[index] !== 0) return false;
-
+  let remaining = targetCents;
+  const counts = [];
+  for (let index = 0; index < options.length; index += 1) {
     const { value } = options[index];
     const maxTake = Math.min(maxAvailable[index], Math.floor(remaining / value));
-    for (let take = 0; take <= maxTake; take += 1) {
-      used[index] = take;
-      if (search(index + 1, remaining - (take * value), pieces + take)) return true;
-    }
-    used[index] = 0;
-    return false;
+    let take = 0;
+    while (take <= maxTake && !suffixReachable[index + 1][remaining - (take * value)]) take += 1;
+    counts.push(take);
+    remaining -= take * value;
   }
 
-  search(0, TARGET_CENTS, 0);
-  if (!best) return null;
   return options
-    .map((option, index) => ({ ...option, count: best.counts[index] }))
+    .map((option, index) => ({ ...option, count: counts[index] }))
     .filter((option) => option.count > 0);
 }
 
 function updateReserveSuggestion(total) {
   els.reservePanel.classList.remove('not-ready', 'ready', 'unavailable');
   els.reserveList.replaceChildren();
-  els.withdrawalValue.textContent = total >= TARGET_CENTS ? formatBRL(total - TARGET_CENTS) : 'R$ 0,00';
+  els.withdrawalValue.textContent = total >= targetCents ? formatBRL(total - targetCents) : 'R$ 0,00';
 
-  if (total < TARGET_CENTS) {
+  if (total < targetCents) {
     els.reservePanel.classList.add('not-ready');
     els.reserveState.textContent = 'Aguardando contagem';
-    els.reserveAdvice.textContent = `Faltam ${formatBRL(TARGET_CENTS - total)} no caixa para conseguir deixar o fundo de amanhã.`;
+    els.reserveAdvice.textContent = `Faltam ${formatBRL(targetCents - total)} no caixa para conseguir deixar o fundo de amanhã.`;
     return;
   }
 
@@ -350,13 +395,13 @@ function updateReserveSuggestion(total) {
   if (!combination) {
     els.reservePanel.classList.add('unavailable');
     els.reserveState.textContent = 'Troque alguma peça';
-    els.reserveAdvice.textContent = 'O total já passa de R$ 200,00, mas essas unidades não formam R$ 200,00 exatos. Troque uma nota por moedas ou outra cédula.';
+    els.reserveAdvice.textContent = `O total já passa de ${formatBRL(targetCents)}, mas essas unidades não formam o fundo exato. Troque uma nota por moedas ou outra cédula.`;
     return;
   }
 
   els.reservePanel.classList.add('ready');
   els.reserveState.textContent = 'Combinação encontrada';
-  els.reserveAdvice.textContent = 'A sugestão leva as notas altas e deixa primeiro as notas e moedas menores para facilitar o troco amanhã.';
+  els.reserveAdvice.textContent = 'Prioriza moedas e valores menores, evitando deixar cédulas altas para facilitar o troco.';
   combination.forEach(({ count, value }) => {
     const chip = document.createElement('span');
     chip.className = 'reserve-chip';
@@ -415,10 +460,40 @@ function historyResult(record) {
 
 function renderHistory() {
   els.historyList.replaceChildren();
-  els.historyEmpty.hidden = closingHistory.length > 0;
+  const filter = els.historyFilter.value;
+  const visibleHistory = closingHistory.filter((record) => (
+    filter === 'all'
+    || (filter === 'exact' && record.difference === 0)
+    || (filter === 'short' && record.difference < 0)
+    || (filter === 'over' && record.difference > 0)
+  ));
+  els.historyEmpty.hidden = visibleHistory.length > 0;
+  els.historyEmpty.textContent = closingHistory.length
+    ? 'Não há fechamentos neste filtro.'
+    : 'Quando você registrar um fechamento, ele aparecerá aqui para consulta rápida.';
   els.clearHistoryButton.disabled = closingHistory.length === 0;
 
-  closingHistory.forEach((record) => {
+  const exactCount = closingHistory.filter((record) => record.difference === 0).length;
+  const shortTotal = closingHistory.reduce((total, record) => total + Math.max(0, -record.difference), 0);
+  const overTotal = closingHistory.reduce((total, record) => total + Math.max(0, record.difference), 0);
+  const insightValues = [
+    [`${closingHistory.length}`, 'fechamentos'],
+    [`${exactCount}`, 'bateram com o PDV'],
+    [formatBRL(shortTotal), 'faltas acumuladas'],
+    [formatBRL(overTotal), 'sobras acumuladas'],
+  ];
+  els.historyInsights.replaceChildren(...insightValues.map(([value, label]) => {
+    const item = document.createElement('div');
+    item.className = 'history-insight';
+    const strong = document.createElement('strong');
+    strong.textContent = value;
+    const caption = document.createElement('span');
+    caption.textContent = label;
+    item.append(strong, caption);
+    return item;
+  }));
+
+  visibleHistory.forEach((record) => {
     const result = historyResult(record);
     const item = document.createElement('article');
     item.className = 'history-item';
@@ -440,7 +515,8 @@ function renderHistory() {
     const reserveText = record.reserve?.length
       ? record.reserve.map(({ count, value }) => `${count}× ${formatBRL(value)}`).join(' + ')
       : 'Sem combinação exata para o fundo';
-    reserve.textContent = `Fundo de amanhã: ${reserveText}`;
+    const savedTarget = Number.isSafeInteger(record.reserveTargetCents) ? record.reserveTargetCents : DEFAULT_TARGET_CENTS;
+    reserve.textContent = `Fundo de amanhã (${formatBRL(savedTarget)}): ${reserveText}`;
 
     item.append(date, values, status, reserve);
     els.historyList.append(item);
@@ -485,6 +561,7 @@ function recordClosing() {
     totalCents: total,
     pdvCents,
     difference: total - pdvCents,
+    reserveTargetCents: targetCents,
     reserve: reserve.map(({ count, value }) => ({ count, value })),
   }, ...closingHistory].slice(0, 60);
   saveHistory();
@@ -517,7 +594,7 @@ function buildClosingSummary() {
     `Valor do PDV: ${formatBRL(pdvCents)}`,
     `Resultado: ${result}`,
     `Fundo de amanhã: ${reserveText}`,
-    `Para retirada/conferência: ${formatBRL(Math.max(0, total - TARGET_CENTS))}`,
+    `Para retirada/conferência: ${formatBRL(Math.max(0, total - targetCents))}`,
   ].join('\n');
 }
 
@@ -595,13 +672,14 @@ function clearClosingCount() {
 }
 
 function switchView(viewName) {
-  const titles = { opening: 'Conferência de abertura', closing: 'Conferência de fechamento', extras: 'Ferramentas em desenvolvimento' };
+  const titles = { opening: 'Conferência de abertura', closing: 'Conferência de fechamento', extras: 'Ferramentas do caixa' };
   if (!titles[viewName]) viewName = 'opening';
   document.querySelectorAll('.view-panel').forEach((panel) => {
     const on = panel.id === `${viewName}-view`;
     panel.hidden = !on;
     panel.classList.toggle('active', on);
   });
+  els.quickExtrasButton.hidden = !quickModeEnabled || viewName === 'extras';
   els.topbarContext.textContent = titles[viewName];
   els.modeButtons.forEach((button) => {
     const selected = button.dataset.view === viewName;
@@ -665,7 +743,7 @@ if ('serviceWorker' in navigator) {
 }
 
 els.modeButtons.forEach((button) => button.addEventListener('click', () => switchView(button.dataset.view)));
-document.querySelector('.footer-extras').addEventListener('click', () => switchView('extras'));
+document.querySelectorAll('[data-view="extras"]').forEach((button) => button.addEventListener('click', () => switchView('extras')));
 document.querySelector('#extras-back-button').addEventListener('click', () => switchView('opening'));
 document.querySelector('.brand').addEventListener('click', (event) => {
   event.preventDefault();
@@ -678,6 +756,16 @@ els.installButton.addEventListener('click', installApp);
 els.recordClosingButton.addEventListener('click', recordClosing);
 els.copySummaryButton.addEventListener('click', copyClosingSummary);
 els.clearHistoryButton.addEventListener('click', clearHistory);
+els.historyFilter.addEventListener('change', renderHistory);
+els.quickModeToggle.addEventListener('change', () => setQuickMode(els.quickModeToggle.checked));
+window.addEventListener('caixa-facil-settings-changed', (event) => {
+  const updatedTarget = event.detail?.targetCents;
+  if (!Number.isSafeInteger(updatedTarget) || updatedTarget <= 0 || updatedTarget > MAX_TARGET_CENTS) return;
+  targetCents = updatedTarget;
+  updateTargetLabels();
+  updateOpeningCalculations();
+  updateClosingCalculations();
+});
 els.pdvInput.addEventListener('input', () => {
   pdvCents = parseMoneyCents(els.pdvInput.value);
   saveClosingState();
@@ -687,9 +775,12 @@ els.pdvInput.addEventListener('blur', () => {
   els.pdvInput.value = formatInputMoney(pdvCents);
 });
 
+loadTargetSetting();
+updateTargetLabels();
 loadOpeningState();
 loadClosingState();
 loadHistory();
+setQuickMode(localStorage.getItem(QUICK_MODE_STORAGE_KEY) === 'true', false);
 renderMoneyRows({ listElement: els.billsList, type: 'bills', values: denominations.bills, state: openingState, prefix: 'opening', onChange: () => { saveOpeningState(); updateOpeningCalculations(); } });
 renderMoneyRows({ listElement: els.coinsList, type: 'coins', values: denominations.coins, state: openingState, prefix: 'opening', onChange: () => { saveOpeningState(); updateOpeningCalculations(); } });
 renderMoneyRows({ listElement: els.closingBillsList, type: 'bills', values: denominations.bills, state: closingState, prefix: 'closing', onChange: () => { saveClosingState(); updateClosingCalculations(); } });

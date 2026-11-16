@@ -1,9 +1,14 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const MOV_KEY = 'caixa-facil-moves-v1';
+  const ROUNDING_KEY = 'caixa-facil-rounding-v1';
+  const SETTINGS_KEY = 'caixa-facil-settings-v1';
+  const MAX_TARGET_CENTS = 1000000;
   const CHANGE = [20000, 10000, 5000, 2000, 1000, 500, 200, 100, 50, 25, 10, 5];
   let kind = 'sangria';
   let moves = [];
+  let roundingKind = 'held';
+  let roundingEntries = [];
 
   const feedback = (msg) => {
     const el = $('#x-feedback');
@@ -11,6 +16,49 @@
     clearTimeout(feedback.t);
     feedback.t = setTimeout(() => { el.textContent = ''; }, 4000);
   };
+
+  function formatInputCents(cents) {
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
+  }
+
+  function loadTargetSetting() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const saved = JSON.parse(raw || 'null');
+      const valid = Number.isSafeInteger(saved?.targetCents) && saved.targetCents > 0 && saved.targetCents <= MAX_TARGET_CENTS;
+      const target = valid ? saved.targetCents : 20000;
+      $('#fund-target-input').value = formatInputCents(target);
+      if (raw && !valid) {
+        $('#fund-target-feedback').textContent = 'A configuração estava inválida; o fundo padrão de R$ 200,00 foi restaurado.';
+        $('#fund-target-feedback').className = 'action-feedback warning';
+      }
+    } catch {
+      $('#fund-target-input').value = '200,00';
+      $('#fund-target-feedback').textContent = 'Não foi possível ler o fundo salvo; usando o valor padrão de R$ 200,00.';
+      $('#fund-target-feedback').className = 'action-feedback warning';
+    }
+  }
+
+  function saveTargetSetting() {
+    const cents = parseMoneyCents($('#fund-target-input').value);
+    const message = $('#fund-target-feedback');
+    if (!cents || cents > MAX_TARGET_CENTS) {
+      message.textContent = 'Informe um valor entre R$ 0,01 e R$ 10.000,00.';
+      message.className = 'action-feedback warning';
+      return;
+    }
+
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ targetCents: cents }));
+      $('#fund-target-input').value = formatInputCents(cents);
+      window.dispatchEvent(new CustomEvent('caixa-facil-settings-changed', { detail: { targetCents: cents } }));
+      message.textContent = `Fundo atualizado para ${formatBRL(cents)}.`;
+      message.className = 'action-feedback success';
+    } catch {
+      message.textContent = 'Não foi possível salvar o valor neste aparelho.';
+      message.className = 'action-feedback warning';
+    }
+  }
 
   // ---- Troco
   function calcChange() {
@@ -69,6 +117,96 @@
     } catch { moves = []; }
   }
 
+  // ---- Ajustes de arredondamento no troco
+  function saveRoundingEntries() {
+    try {
+      localStorage.setItem(ROUNDING_KEY, JSON.stringify(roundingEntries));
+    } catch {
+      feedback('Não foi possível salvar os ajustes.');
+    }
+  }
+
+  function renderRounding() {
+    const held = roundingEntries.filter((entry) => entry.kind === 'held').reduce((sum, entry) => sum + entry.cents, 0);
+    const extra = roundingEntries.filter((entry) => entry.kind === 'extra').reduce((sum, entry) => sum + entry.cents, 0);
+    const balance = held - extra;
+    $('#rounding-held-total').textContent = formatBRL(held);
+    $('#rounding-extra-total').textContent = formatBRL(extra);
+    const balanceBox = $('#rounding-balance');
+    balanceBox.className = `rounding-balance ${balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'balanced'}`;
+    balanceBox.textContent = balance > 0
+      ? `Saldo positivo: ${formatBRL(balance)} a mais no caixa.`
+      : balance < 0
+        ? `Saldo negativo: ${formatBRL(Math.abs(balance))} a menos no caixa.`
+        : 'Saldo zerado: o que segurou e o que deu a mais se compensaram.';
+    $('#rounding-clear').disabled = roundingEntries.length === 0;
+    $('#rounding-list').replaceChildren(...roundingEntries.map((entry) => {
+      const item = document.createElement('article');
+      item.className = 'history-item x-move';
+      const label = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = entry.kind === 'held' ? '+ Segurei' : '− Dei a mais';
+      const time = document.createElement('small');
+      const date = new Date(entry.at);
+      time.textContent = Number.isNaN(date.getTime()) ? 'Data desconhecida' : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+      label.append(title, time);
+      const amount = document.createElement('strong');
+      amount.className = entry.kind === 'held' ? 'x-pos' : 'x-neg';
+      amount.textContent = formatBRL(entry.cents);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'x-del';
+      remove.setAttribute('aria-label', 'Remover ajuste de troco');
+      remove.textContent = '×';
+      remove.addEventListener('click', () => {
+        roundingEntries = roundingEntries.filter((candidate) => candidate.id !== entry.id);
+        saveRoundingEntries();
+        renderRounding();
+      });
+      item.append(label, amount, remove);
+      return item;
+    }));
+  }
+
+  function loadRoundingEntries() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(ROUNDING_KEY) || '[]');
+      if (!Array.isArray(saved)) throw new Error('Invalid rounding entries');
+      const validEntries = saved.filter((entry) => entry && Number.isSafeInteger(entry.cents) && entry.cents > 0
+        && ['held', 'extra'].includes(entry.kind) && typeof entry.at === 'string');
+      if (validEntries.length !== saved.length) feedback('Alguns ajustes salvos estavam inválidos e foram ignorados.');
+      roundingEntries = validEntries.slice(0, 100);
+    } catch {
+      roundingEntries = [];
+      feedback('Não foi possível ler os ajustes de troco salvos.');
+    }
+  }
+
+  function addRoundingEntry() {
+    const cents = parseMoneyCents($('#rounding-value').value);
+    if (!cents) {
+      $('#rounding-balance').textContent = 'Informe o valor do ajuste.';
+      $('#rounding-balance').className = 'rounding-balance negative';
+      return;
+    }
+    roundingEntries = [{
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      kind: roundingKind,
+      cents,
+      at: new Date().toISOString(),
+    }, ...roundingEntries].slice(0, 100);
+    $('#rounding-value').value = '';
+    saveRoundingEntries();
+    renderRounding();
+  }
+
+  function clearRoundingEntries() {
+    if (!roundingEntries.length || !confirm('Zerar todos os ajustes de troco?')) return;
+    roundingEntries = [];
+    saveRoundingEntries();
+    renderRounding();
+  }
+
   // ---- Compartilhar, CSV, backup
   const fmtDate = (iso) => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   function download(name, text, type) {
@@ -119,6 +257,23 @@
 
   // ---- Eventos
   ['#troco-due', '#troco-paid'].forEach((s) => $(s).addEventListener('input', calcChange));
+  $('#fund-target-save').addEventListener('click', saveTargetSetting);
+  $('#fund-target-input').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') saveTargetSetting();
+  });
+  document.querySelectorAll('[data-rounding-kind]').forEach((button) => button.addEventListener('click', () => {
+    roundingKind = button.dataset.roundingKind;
+    document.querySelectorAll('[data-rounding-kind]').forEach((option) => {
+      const selected = option === button;
+      option.classList.toggle('active', selected);
+      option.setAttribute('aria-pressed', String(selected));
+    });
+  }));
+  $('#rounding-add').addEventListener('click', addRoundingEntry);
+  $('#rounding-value').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') addRoundingEntry();
+  });
+  $('#rounding-clear').addEventListener('click', clearRoundingEntries);
   document.querySelectorAll('.x-seg-btn').forEach((b) => b.addEventListener('click', () => {
     kind = b.dataset.kind;
     document.querySelectorAll('.x-seg-btn').forEach((x) => x.classList.toggle('active', x === b));
@@ -142,4 +297,7 @@
 
   loadMoves();
   renderMoves();
+  loadTargetSetting();
+  loadRoundingEntries();
+  renderRounding();
 })();

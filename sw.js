@@ -1,10 +1,10 @@
-const CACHE_NAME = 'caixa-facil-shell-v7';
+const CACHE_NAME = 'caixa-facil-shell-v15';
 const APP_SHELL = [
   './index.html',
-  './styles.css?v=6',
-  './extras.css?v=6',
-  './app.js?v=6',
-  './extras.js?v=6',
+  './styles.css?v=14',
+  './extras.css?v=14',
+  './app.js?v=14',
+  './extras.js?v=14',
   './manifest.webmanifest',
   './manus-routes.json',
   './icons/icon-192.png',

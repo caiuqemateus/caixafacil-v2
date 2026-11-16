@@ -1,18 +1,21 @@
 # Entregas do Caixa Fácil
 
-## Conferência do fundo inicial de R$ 200,00 — concluído
+## Conferência do fundo inicial configurável — concluído
 - [x] A tela principal explica de forma curta e direta como realizar a contagem.
 - [x] A pessoa informa quantidades inteiras não negativas para cédulas e moedas.
 - [x] Cada valor apresenta subtotal automático e o total geral é recalculado.
-- [x] O status indica se o caixa está abaixo, exatamente em ou acima da meta de R$ 200,00.
+- [x] O valor do fundo inicial pode ser configurado em Extras (de R$ 0,01 a R$ 10.000,00).
+- [x] O status indica se o caixa está abaixo, exatamente em ou acima da meta configurada.
 - [x] O app indica em reais quanto falta para atingir a meta ou quanto está sobrando.
+- [x] O modo de contagem rápida é ligado ou desligado em Extras e aplicado à abertura e ao fechamento.
+- [x] No modo simples, a tela esconde textos e detalhes secundários, destaca os valores e amplia os controles; Enter leva ao próximo valor.
 
 ## Fechamento e conferência com o PDV — concluído
 - [x] A pessoa acessa uma área separada de fechamento sem perder a contagem de abertura.
 - [x] A pessoa informa o valor exibido no PDV e as quantidades contadas no fechamento.
 - [x] O app compara o total contado com o PDV e indica se bateu, se falta dinheiro ou se sobra dinheiro.
-- [x] O app calcula o valor para retirada/conferência depois de separar R$ 200,00 para o próximo operador.
-- [x] A sugestão forma exatamente R$ 200,00 e prioriza deixar notas e moedas menores para facilitar o troco.
+- [x] O app calcula o valor para retirada/conferência depois de separar o fundo configurado.
+- [x] A sugestão forma exatamente o fundo configurado, priorizando moedas e denominações menores e preservando notas altas.
 - [x] A contagem de fechamento e o valor do PDV são salvos separadamente no aparelho.
 
 ## App instalável e offline — concluído
@@ -24,10 +27,16 @@
 
 ## Histórico e ações rápidas — concluído
 - [x] O operador pode registrar o fechamento atual com data, hora, total contado, PDV, diferença e sugestão do fundo.
-- [x] O app mantém e mostra até 10 fechamentos recentes neste aparelho.
+- [x] O app mantém e mostra até 60 fechamentos recentes neste aparelho, agora na área Extras.
+- [x] O histórico mostra totais de faltas/sobras e permite filtrar fechamentos que bateram, faltaram ou sobraram.
 - [x] O operador pode copiar um resumo do fechamento para enviar ou guardar.
 - [x] O operador pode apagar o histórico com confirmação.
 - [x] A aba ativa de abertura ou fechamento é lembrada no aparelho.
+
+## Ajustes de arredondamento — concluído
+- [x] O operador registra valores que segurou do troco ou deu a mais.
+- [x] O app calcula o saldo líquido e indica se ficou a mais ou a menos no caixa.
+- [x] Os ajustes ficam salvos no aparelho e podem ser removidos ou zerados.
 
 ## Evidências da entrega
 

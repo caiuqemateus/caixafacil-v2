@@ -18,8 +18,8 @@
       } catch {}
     </script>
     <title>Caixa Fácil · Abertura e fechamento</title>
-    <link rel="stylesheet" href="styles.css?v=6" />
-    <link rel="stylesheet" href="extras.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=14" />
+    <link rel="stylesheet" href="extras.css?v=14" />
   </head>
   <body>
     <header class="topbar">
@@ -39,6 +39,7 @@
       <button class="theme-button" id="theme-button" type="button" aria-label="Ativar modo escuro" aria-pressed="false">
         <span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Escuro</span>
       </button>
+      <button class="quick-extras-button" type="button" data-view="extras">Extras</button>
     </header>
     <nav class="mobile-dock" aria-label="Navegação principal">
       <button class="mode-button active" type="button" data-view="opening" aria-selected="true"><span aria-hidden="true">▦</span> Abertura</button>
@@ -53,9 +54,9 @@
             <h1 id="page-title">Confira seu caixa <em>sem fazer contas.</em></h1>
             <p class="intro-text">Conte as notas e moedas que estão na gaveta. O Caixa Fácil soma tudo para você e avisa quando já dá para começar a operar.</p>
           </div>
-          <div class="goal-tag" aria-label="Meta do fundo inicial: 200 reais">
+          <div class="goal-tag" id="opening-goal-tag">
             <span class="goal-tag-label">Fundo inicial</span>
-            <strong>R$ 200,00</strong>
+            <strong id="opening-goal-value">R$ 200,00</strong>
           </div>
         </section>
 
@@ -102,7 +103,7 @@
             <h2 id="summary-title">Total no caixa</h2>
             <p class="big-total" id="grand-total">R$ 0,00</p>
 
-            <div class="progress-area" aria-label="Progresso até a meta de 200 reais">
+            <div class="progress-area" id="opening-progress-area">
               <div class="progress-meta">
                 <span>Progresso da meta</span>
                 <strong id="progress-label">0%</strong>
@@ -149,11 +150,11 @@
           <div class="intro-copy">
             <p class="eyebrow">Seu último passo do dia</p>
             <h1 id="closing-title">Feche seu caixa <em>com tudo conferido.</em></h1>
-            <p class="intro-text">Conte o dinheiro, informe o valor que aparece no PDV e veja na hora se o caixa bateu. Depois, separe os R$ 200,00 do próximo operador.</p>
+            <p class="intro-text">Conte o dinheiro, informe o valor que aparece no PDV e veja na hora se o caixa bateu. Depois, separe o fundo do próximo operador.</p>
           </div>
-          <div class="goal-tag" aria-label="Valor para deixar para o próximo operador: 200 reais">
+          <div class="goal-tag" id="closing-goal-tag">
             <span class="goal-tag-label">Deixe para amanhã</span>
-            <strong>R$ 200,00</strong>
+            <strong id="closing-goal-value">R$ 200,00</strong>
           </div>
         </section>
 
@@ -198,14 +199,16 @@
               <span class="saved-label" id="closing-saved-label">Salvando automaticamente</span>
             </div>
             <h2 id="closing-summary-title">Compare com o PDV</h2>
-            <label class="closing-field-label" for="pdv-input">Valor que aparece no PDV</label>
-            <div class="currency-input">
-              <span aria-hidden="true">R$</span>
-              <input id="pdv-input" type="text" inputmode="decimal" value="0,00" aria-label="Valor que aparece no PDV" autocomplete="off" />
+            <div class="quick-pdv-field">
+              <label class="closing-field-label" for="pdv-input">Valor que aparece no PDV</label>
+              <div class="currency-input">
+                <span aria-hidden="true">R$</span>
+                <input id="pdv-input" type="text" inputmode="decimal" value="0,00" aria-label="Valor que aparece no PDV" autocomplete="off" />
+              </div>
             </div>
 
             <div class="closing-total-line">
-              <span>Dinheiro contado</span>
+              <span>Contado</span>
               <strong id="closing-total">R$ 0,00</strong>
             </div>
 
@@ -252,18 +255,6 @@
           </aside>
         </section>
 
-        <section class="history-section" aria-labelledby="history-title">
-          <div class="history-heading">
-            <div>
-              <p class="eyebrow">Só neste aparelho</p>
-              <h2 id="history-title">Últimos fechamentos</h2>
-            </div>
-            <button class="history-clear-button" id="clear-history-button" type="button">Limpar histórico</button>
-          </div>
-          <div class="history-list" id="history-list" aria-live="polite"></div>
-          <p class="history-empty" id="history-empty">Quando você registrar um fechamento, ele aparecerá aqui para consulta rápida.</p>
-        </section>
-
         <section class="how-to closing-how" aria-labelledby="closing-how-title">
           <div class="how-intro">
             <p class="eyebrow">Para fechar sem dúvida</p>
@@ -272,7 +263,7 @@
           <ol class="steps">
             <li><span>01</span><div><strong>Conte</strong><p>Separe e conte cada cédula e moeda do caixa.</p></div></li>
             <li><span>02</span><div><strong>Compare</strong><p>Digite o valor do PDV e veja se os números batem.</p></div></li>
-            <li><span>03</span><div><strong>Separe</strong><p>Use a sugestão para deixar R$ 200,00 para amanhã.</p></div></li>
+            <li><span>03</span><div><strong>Separe</strong><p>Use a sugestão para deixar o fundo configurado para o próximo turno.</p></div></li>
           </ol>
         </section>
       </section>
@@ -280,11 +271,46 @@
       <section class="view-panel" id="extras-view" hidden>
         <section class="intro extras-intro">
           <div class="intro-copy">
-            <p class="eyebrow">Em desenvolvimento</p>
+            <p class="eyebrow">Ferramentas do caixa</p>
             <h1>Mais <em>controle</em> no caixa.</h1>
-            <p class="intro-text">Estas ferramentas ainda estão sendo preparadas.</p>
+            <p class="intro-text">Preferências, conferências e histórico salvos neste aparelho.</p>
           </div>
           <button class="primary-action extras-back" id="extras-back-button" type="button">← Voltar para abertura</button>
+        </section>
+        <section class="money-group settings-card" aria-labelledby="fund-setting-title">
+          <div>
+            <h2 id="fund-setting-title">Preferências do caixa</h2>
+            <p class="x-help">Configure o fundo e a tela de contagem.</p>
+          </div>
+          <div class="fund-setting-form">
+            <label class="closing-field-label x-label" for="fund-target-input">Fundo para o próximo turno</label>
+            <div class="currency-input x-input"><span>R$</span><input id="fund-target-input" inputmode="decimal" value="200,00" autocomplete="off" /></div>
+            <button class="primary-action x-add" id="fund-target-save" type="button">Salvar valor</button>
+          </div>
+          <p class="action-feedback" id="fund-target-feedback" role="status" aria-live="polite"></p>
+          <label class="quick-mode-setting" for="quick-mode-toggle">
+            <input id="quick-mode-toggle" type="checkbox" />
+            <span><strong>Modo de contagem rápida</strong><small>Tela limpa, com foco nos valores.</small></span>
+          </label>
+        </section>
+        <section class="history-section extras-history" aria-labelledby="history-title">
+          <div class="history-heading">
+            <div>
+              <p class="eyebrow">Só neste aparelho</p>
+              <h2 id="history-title">Histórico de fechamentos</h2>
+            </div>
+            <button class="history-clear-button" id="clear-history-button" type="button">Limpar histórico</button>
+          </div>
+          <div class="history-insights" id="history-insights" aria-live="polite"></div>
+          <label class="history-filter-label" for="history-filter">Mostrar</label>
+          <select id="history-filter" class="history-filter">
+            <option value="all">Todos os fechamentos</option>
+            <option value="exact">Caixa bateu</option>
+            <option value="short">Faltou dinheiro</option>
+            <option value="over">Sobrou dinheiro</option>
+          </select>
+          <div class="history-list" id="history-list" aria-live="polite"></div>
+          <p class="history-empty" id="history-empty">Quando você registrar um fechamento, ele aparecerá aqui para consulta rápida.</p>
         </section>
         <div class="extras-grid">
           <section class="money-group" aria-labelledby="troco-title">
@@ -309,6 +335,24 @@
             <div class="history-list" id="mov-list"></div>
             <button class="history-clear-button" id="mov-clear" type="button">Zerar movimentos do dia</button>
           </section>
+          <section class="money-group" aria-labelledby="rounding-title">
+            <h3 id="rounding-title">Ajustes de troco</h3>
+            <p class="x-help">Anote quando segurou troco ou deu a mais. O saldo mostra o efeito no caixa.</p>
+            <div class="x-seg" role="group" aria-label="Tipo de ajuste de troco">
+              <button type="button" class="rounding-kind active" data-rounding-kind="held" aria-pressed="true">Segurei</button>
+              <button type="button" class="rounding-kind" data-rounding-kind="extra" aria-pressed="false">Dei a mais</button>
+            </div>
+            <label class="closing-field-label x-label" for="rounding-value">Valor do ajuste</label>
+            <div class="currency-input x-input"><span>R$</span><input id="rounding-value" inputmode="decimal" placeholder="0,00" autocomplete="off" /></div>
+            <button class="primary-action x-add" id="rounding-add" type="button">Registrar ajuste</button>
+            <div class="rounding-balance" id="rounding-balance" role="status" aria-live="polite"></div>
+            <div class="x-totals rounding-totals">
+              <span>Segurei<strong id="rounding-held-total">R$ 0,00</strong></span>
+              <span>Dei a mais<strong id="rounding-extra-total">R$ 0,00</strong></span>
+            </div>
+            <div class="history-list" id="rounding-list"></div>
+            <button class="history-clear-button" id="rounding-clear" type="button">Zerar ajustes</button>
+          </section>
           <section class="money-group" aria-labelledby="bk-title">
             <h3 id="bk-title">Histórico, backup e envio</h3>
             <p class="x-help">Seus dados ficam só neste aparelho. Faça backup de vez em quando.</p>
@@ -328,9 +372,9 @@
     <footer class="footer">
       <span>Caixa Fácil</span>
       <span>Criado por Sr.Reinã</span>
-      <button class="footer-extras" type="button" data-view="extras">Extras · em desenvolvimento</button>
+      <button class="footer-extras" type="button" data-view="extras">Extras</button>
     </footer>
-    <script src="app.js?v=6" defer></script>
-    <script src="extras.js?v=6" defer></script>
+    <script src="app.js?v=14" defer></script>
+    <script src="extras.js?v=14" defer></script>
   </body>
 </html>
