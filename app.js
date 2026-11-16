@@ -29,6 +29,7 @@ let targetCents = DEFAULT_TARGET_CENTS;
 let quickModeEnabled = false;
 
 const els = {
+  launchScreen: document.querySelector('#launch-screen'),
   modeButtons: document.querySelectorAll('.mode-button'),
   themeButton: document.querySelector('#theme-button'),
   openingView: document.querySelector('#opening-view'),
@@ -792,3 +793,7 @@ updateClosingCalculations();
 updateThemeButton(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 const savedView = localStorage.getItem(ACTIVE_VIEW_KEY);
 if (savedView && savedView !== 'opening') switchView(savedView);
+window.setTimeout(() => {
+  els.launchScreen.classList.add('is-hidden');
+  els.launchScreen.setAttribute('aria-hidden', 'true');
+}, 650);

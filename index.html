@@ -18,10 +18,21 @@
       } catch {}
     </script>
     <title>Caixa Fácil · Abertura e fechamento</title>
-    <link rel="stylesheet" href="styles.css?v=16" />
+    <link rel="stylesheet" href="styles.css?v=17" />
     <link rel="stylesheet" href="extras.css?v=18" />
   </head>
   <body>
+    <div class="launch-screen" id="launch-screen" role="status" aria-label="Carregando o Caixa Fácil">
+      <div class="launch-content">
+        <div class="launch-mark" aria-hidden="true">
+          <svg class="ui-icon"><use href="./icons.svg#icon-wallet"></use></svg>
+        </div>
+        <h1 class="launch-title">Caixa Fácil</h1>
+        <p class="launch-subtitle">Controle simples para o seu caixa.</p>
+        <div class="launch-progress" aria-hidden="true"><span></span></div>
+        <p class="launch-credit">Criado por <strong>Sr.Reinã</strong></p>
+      </div>
+    </div>
     <header class="topbar">
       <a class="brand" href="./" aria-label="Caixa Fácil, início">
         <span class="brand-mark" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-wallet"></use></svg></span>
@@ -370,7 +381,7 @@
       <span>Criado por Sr.Reinã</span>
       <button class="footer-extras" type="button" data-view="extras">Extras</button>
     </footer>
-    <script src="app.js?v=16" defer></script>
+    <script src="app.js?v=17" defer></script>
     <script src="extras.js?v=14" defer></script>
   </body>
 </html>
