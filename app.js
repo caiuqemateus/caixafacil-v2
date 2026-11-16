@@ -724,8 +724,17 @@ async function installApp() {
   els.installButton.hidden = true;
 }
 
+function isAppInstalled() {
+  const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches;
+  const isNative = window.Capacitor?.isNativePlatform?.();
+  return Boolean(isStandalone || navigator.standalone || isNative);
+}
+
+els.installButton.hidden = isAppInstalled();
+
 window.addEventListener('beforeinstallprompt', (event) => {
   event.preventDefault();
+  if (isAppInstalled()) return;
   installPromptEvent = event;
   els.installButton.hidden = false;
 });
