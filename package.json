@@ -1,0 +1,9 @@
+{
+  "name": "caixa-facil",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "rm -rf dist && mkdir -p dist/icons && cp index.html app.js extras.js extras.css styles.css manus-routes.json manifest.webmanifest sw.js dist/ && cp icons/icon-192.png icons/icon-512.png dist/icons/"
+  }
+}
