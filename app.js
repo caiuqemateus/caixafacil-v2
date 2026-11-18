@@ -7,16 +7,26 @@ const ACTIVE_VIEW_KEY = 'caixa-facil-active-view-v1';
 const THEME_STORAGE_KEY = 'caixa-facil-theme-v1';
 const SETTINGS_STORAGE_KEY = 'caixa-facil-settings-v1';
 const QUICK_MODE_STORAGE_KEY = 'caixa-facil-quick-mode-v1';
+const PACKAGES_STORAGE_KEY = 'caixa-facil-packages-enabled-v1';
 
 const denominations = {
   bills: [20000, 10000, 5000, 2000, 1000, 500, 200],
   coins: [100, 50, 25, 10, 5],
 };
 
+const coinPackages = {
+  100: { coins: 20, value: 2000 },
+  50: { coins: 20, value: 1000 },
+  25: { coins: 20, value: 500 },
+  10: { coins: 30, value: 300 },
+  5: { coins: 40, value: 200 },
+};
+
 function createCountState() {
   return {
     bills: Object.fromEntries(denominations.bills.map((value) => [value, 0])),
     coins: Object.fromEntries(denominations.coins.map((value) => [value, 0])),
+    packages: Object.fromEntries(denominations.coins.map((value) => [value, 0])),
   };
 }
 
@@ -27,6 +37,7 @@ let closingHistory = [];
 let installPromptEvent = null;
 let targetCents = DEFAULT_TARGET_CENTS;
 let quickModeEnabled = false;
+let packagesEnabled = false;
 
 const els = {
   launchScreen: document.querySelector('#launch-screen'),
@@ -36,6 +47,9 @@ const els = {
   closingView: document.querySelector('#closing-view'),
   billsList: document.querySelector('#bills-list'),
   coinsList: document.querySelector('#coins-list'),
+  openingPackagesList: document.querySelector('#opening-packages-list'),
+  openingPackagesSection: document.querySelector('#opening-packages-section'),
+  openingPackagesTotal: document.querySelector('#opening-packages-total'),
   billsTotal: document.querySelector('#bills-total'),
   coinsTotal: document.querySelector('#coins-total'),
   grandTotal: document.querySelector('#grand-total'),
@@ -52,6 +66,9 @@ const els = {
   clearButton: document.querySelector('#clear-button'),
   closingBillsList: document.querySelector('#closing-bills-list'),
   closingCoinsList: document.querySelector('#closing-coins-list'),
+  closingPackagesList: document.querySelector('#closing-packages-list'),
+  closingPackagesSection: document.querySelector('#closing-packages-section'),
+  closingPackagesTotal: document.querySelector('#closing-packages-total'),
   closingBillsTotal: document.querySelector('#closing-bills-total'),
   closingCoinsTotal: document.querySelector('#closing-coins-total'),
   closingTotal: document.querySelector('#closing-total'),
@@ -80,6 +97,7 @@ const els = {
   historyFilter: document.querySelector('#history-filter'),
   historyInsights: document.querySelector('#history-insights'),
   quickModeToggle: document.querySelector('#quick-mode-toggle'),
+  packagesToggle: document.querySelector('#packages-toggle'),
   quickExtrasButton: document.querySelector('.quick-extras-button'),
 };
 
@@ -122,6 +140,21 @@ function setQuickMode(enabled, persist = true) {
     localStorage.setItem(QUICK_MODE_STORAGE_KEY, String(enabled));
   } catch {
     els.quickModeToggle.title = 'A preferência não pôde ser salva neste aparelho.';
+  }
+}
+
+function setPackagesMode(enabled, persist = true) {
+  packagesEnabled = enabled;
+  document.body.classList.toggle('coin-packages-enabled', enabled);
+  els.packagesToggle.checked = enabled;
+  els.openingPackagesSection.hidden = !enabled;
+  els.closingPackagesSection.hidden = !enabled;
+  if (persist) {
+    try {
+      localStorage.setItem(PACKAGES_STORAGE_KEY, String(enabled));
+    } catch {
+      els.packagesToggle.title = 'A preferência não pôde ser salva neste aparelho.';
+    }
   }
 }
 
@@ -210,11 +243,64 @@ function renderMoneyRows({ listElement, type, values, state, prefix, onChange })
   syncRows(prefix, state);
 }
 
+function buildPackageRow({ value, state, prefix, onChange }) {
+  const package = coinPackages[value];
+  const row = document.createElement('div');
+  row.className = 'money-row package-row';
+  row.dataset.packageValue = String(value);
+  row.dataset.prefix = prefix;
+  row.innerHTML = `
+    <div class="denomination">
+      <strong>${formatBRL(value)}</strong>
+      <span>pacote fechado</span>
+    </div>
+    <div class="quantity-control package-stepper" aria-label="Quantidade de pacotes de ${formatBRL(value)}">
+      <button class="step-button package-minus" type="button" aria-label="Diminuir quantidade de pacotes de ${formatBRL(value)}">−</button>
+      <input class="quantity-input package-input" inputmode="numeric" pattern="[0-9]*" type="text" value="0" aria-label="Pacotes de ${formatBRL(value)}" autocomplete="off" />
+      <button class="step-button package-plus" type="button" aria-label="Aumentar quantidade de pacotes de ${formatBRL(value)}">+</button>
+    </div>
+    <span class="subtotal" aria-label="Subtotal do pacote">${formatBRL(0)}</span>
+  `;
+
+  const input = row.querySelector('.package-input');
+  const readPackages = () => {
+    const count = Number(state.packages[value]);
+    return Number.isSafeInteger(count) && count >= 0 ? count : 0;
+  };
+  const writePackages = (count) => {
+    const next = Math.max(0, Math.min(99999, count));
+    state.packages[value] = next;
+    input.value = String(next);
+    onChange();
+  };
+  input.value = String(readPackages());
+  input.addEventListener('input', () => writePackages(safeCount(input.value)));
+  row.querySelector('.package-minus').addEventListener('click', () => writePackages(readPackages() - 1));
+  row.querySelector('.package-plus').addEventListener('click', () => writePackages(readPackages() + 1));
+  row.querySelector('.subtotal').textContent = formatBRL(readPackages() * package.value);
+  return row;
+}
+
+function renderPackageRows({ listElement, state, prefix, onChange }) {
+  listElement.replaceChildren(...denominations.coins.map((value) => buildPackageRow({ value, state, prefix, onChange })));
+}
+
 function syncRows(prefix, state) {
   document.querySelectorAll(`.money-row[data-prefix="${prefix}"]`).forEach((row) => {
     const type = row.dataset.type;
+    if (!type) {
+      const value = Number(row.dataset.packageValue);
+      const count = Number(state.packages?.[value]);
+      row.querySelector('.package-input').value = String(Number.isSafeInteger(count) && count >= 0 ? count : 0);
+      return;
+    }
     const value = Number(row.dataset.value);
     row.querySelector('.quantity-input').value = String(readCount(state, type, value));
+    const packageInput = row.querySelector('.package-input');
+    if (packageInput) {
+      const count = Number(state.packages?.[value]);
+      packageInput.value = String(Number.isSafeInteger(count) && count >= 0 ? count : 0);
+    }
   });
 }
 
@@ -227,7 +313,21 @@ function changeCount({ type, value, state, delta, input, onChange }) {
 }
 
 function sumType(state, type) {
-  return denominations[type].reduce((total, value) => total + (readCount(state, type, value) * value), 0);
+  const loose = denominations[type].reduce((total, value) => total + (readCount(state, type, value) * value), 0);
+  if (type !== 'coins') return loose;
+  return loose + denominations.coins.reduce((total, value) => {
+    const count = Number(state.packages?.[value]);
+    const safePackageCount = Number.isSafeInteger(count) && count >= 0 ? count : 0;
+    return total + (safePackageCount * coinPackages[value].coins * value);
+  }, 0);
+}
+
+function coinsPackageTotal(state) {
+  return denominations.coins.reduce((total, value) => {
+    const count = Number(state.packages?.[value]);
+    const safePackageCount = Number.isSafeInteger(count) && count >= 0 ? count : 0;
+    return total + (safePackageCount * coinPackages[value].value);
+  }, 0);
 }
 
 function totalState(state) {
@@ -237,8 +337,19 @@ function totalState(state) {
 function updateSubtotals(prefix, state) {
   document.querySelectorAll(`.money-row[data-prefix="${prefix}"]`).forEach((row) => {
     const type = row.dataset.type;
+    if (!type) {
+      const value = Number(row.dataset.packageValue);
+      const count = Number(state.packages?.[value]);
+      const safeCountValue = Number.isSafeInteger(count) && count >= 0 ? count : 0;
+      row.querySelector('.subtotal').textContent = formatBRL(safeCountValue * coinPackages[value].value);
+      return;
+    }
     const value = Number(row.dataset.value);
-    row.querySelector('.subtotal').textContent = formatBRL(readCount(state, type, value) * value);
+    const looseCount = readCount(state, type, value);
+    const packageCount = type === 'coins' ? Number(state.packages?.[value]) : 0;
+    const safePackageCount = Number.isSafeInteger(packageCount) && packageCount >= 0 ? packageCount : 0;
+    const packageCoins = type === 'coins' ? coinPackages[value].coins : 0;
+    row.querySelector('.subtotal').textContent = formatBRL((looseCount + (safePackageCount * packageCoins)) * value);
   });
 }
 
@@ -255,6 +366,7 @@ function updateOpeningCalculations() {
 
   els.billsTotal.textContent = formatBRL(billsTotal);
   els.coinsTotal.textContent = formatBRL(coinsTotal);
+  els.openingPackagesTotal.textContent = formatBRL(coinsPackageTotal(openingState));
   els.grandTotal.textContent = formatBRL(total);
   els.progressLabel.textContent = `${Math.round(progress)}%`;
   els.progressBar.style.width = `${progress}%`;
@@ -296,6 +408,7 @@ function updateClosingCalculations() {
 
   els.closingBillsTotal.textContent = formatBRL(billsTotal);
   els.closingCoinsTotal.textContent = formatBRL(coinsTotal);
+  els.closingPackagesTotal.textContent = formatBRL(coinsPackageTotal(closingState));
   els.closingTotal.textContent = formatBRL(total);
   updateSubtotals('closing', closingState);
 
@@ -342,7 +455,13 @@ function findReserveCombination(state) {
     ...denominations.bills.map((value) => ({ type: 'bills', value })),
     ...denominations.coins.map((value) => ({ type: 'coins', value })),
   ];
-  const maxAvailable = options.map(({ type, value }) => Math.min(readCount(state, type, value), Math.floor(targetCents / value)));
+  const maxAvailable = options.map(({ type, value }) => {
+    const looseCount = readCount(state, type, value);
+    const packageCount = type === 'coins' ? Number(state.packages?.[value]) : 0;
+    const safePackageCount = Number.isSafeInteger(packageCount) && packageCount >= 0 ? packageCount : 0;
+    const availableCount = looseCount + (type === 'coins' ? safePackageCount * coinPackages[value].coins : 0);
+    return Math.min(availableCount, Math.floor(targetCents / value));
+  });
   const suffixReachable = Array(options.length + 1);
   suffixReachable[options.length] = new Uint8Array(targetCents + 1);
   suffixReachable[options.length][0] = 1;
@@ -627,6 +746,9 @@ function loadOpeningState() {
   try {
     const saved = JSON.parse(localStorage.getItem(OPENING_STORAGE_KEY) || 'null');
     if (!saved) return;
+    for (const value of denominations.coins) {
+      if (saved.packages && Object.prototype.hasOwnProperty.call(saved.packages, value)) openingState.packages[value] = safeCount(saved.packages[value]);
+    }
     for (const type of ['bills', 'coins']) {
       for (const value of denominations[type]) {
         if (saved[type] && Object.prototype.hasOwnProperty.call(saved[type], value)) openingState[type][value] = safeCount(saved[type][value]);
@@ -643,6 +765,9 @@ function loadClosingState() {
     const saved = JSON.parse(localStorage.getItem(CLOSING_STORAGE_KEY) || 'null');
     if (!saved) return;
     const savedCounts = saved.counts || saved;
+    for (const value of denominations.coins) {
+      if (savedCounts.packages && Object.prototype.hasOwnProperty.call(savedCounts.packages, value)) closingState.packages[value] = safeCount(savedCounts.packages[value]);
+    }
     for (const type of ['bills', 'coins']) {
       for (const value of denominations[type]) {
         if (savedCounts[type] && Object.prototype.hasOwnProperty.call(savedCounts[type], value)) closingState[type][value] = safeCount(savedCounts[type][value]);
@@ -658,6 +783,7 @@ function loadClosingState() {
 function clearOpeningCount() {
   if (!window.confirm('Quer mesmo limpar toda a contagem de abertura e começar de novo?')) return;
   for (const type of ['bills', 'coins']) for (const value of denominations[type]) openingState[type][value] = 0;
+  for (const value of denominations.coins) openingState.packages[value] = 0;
   localStorage.removeItem(OPENING_STORAGE_KEY);
   syncRows('opening', openingState);
   els.savedLabel.textContent = 'Contagem limpa';
@@ -667,6 +793,7 @@ function clearOpeningCount() {
 function clearClosingCount() {
   if (!window.confirm('Quer mesmo limpar todo o fechamento, incluindo o valor do PDV?')) return;
   for (const type of ['bills', 'coins']) for (const value of denominations[type]) closingState[type][value] = 0;
+  for (const value of denominations.coins) closingState.packages[value] = 0;
   pdvCents = 0;
   localStorage.removeItem(CLOSING_STORAGE_KEY);
   els.pdvInput.value = '0,00';
@@ -769,6 +896,7 @@ els.copySummaryButton.addEventListener('click', copyClosingSummary);
 els.clearHistoryButton.addEventListener('click', clearHistory);
 els.historyFilter.addEventListener('change', renderHistory);
 els.quickModeToggle.addEventListener('change', () => setQuickMode(els.quickModeToggle.checked));
+els.packagesToggle.addEventListener('change', () => setPackagesMode(els.packagesToggle.checked));
 window.addEventListener('caixa-facil-settings-changed', (event) => {
   const updatedTarget = event.detail?.targetCents;
   if (!Number.isSafeInteger(updatedTarget) || updatedTarget <= 0 || updatedTarget > MAX_TARGET_CENTS) return;
@@ -792,10 +920,13 @@ loadOpeningState();
 loadClosingState();
 loadHistory();
 setQuickMode(localStorage.getItem(QUICK_MODE_STORAGE_KEY) === 'true', false);
+setPackagesMode(localStorage.getItem(PACKAGES_STORAGE_KEY) === 'true', false);
 renderMoneyRows({ listElement: els.billsList, type: 'bills', values: denominations.bills, state: openingState, prefix: 'opening', onChange: () => { saveOpeningState(); updateOpeningCalculations(); } });
 renderMoneyRows({ listElement: els.coinsList, type: 'coins', values: denominations.coins, state: openingState, prefix: 'opening', onChange: () => { saveOpeningState(); updateOpeningCalculations(); } });
 renderMoneyRows({ listElement: els.closingBillsList, type: 'bills', values: denominations.bills, state: closingState, prefix: 'closing', onChange: () => { saveClosingState(); updateClosingCalculations(); } });
 renderMoneyRows({ listElement: els.closingCoinsList, type: 'coins', values: denominations.coins, state: closingState, prefix: 'closing', onChange: () => { saveClosingState(); updateClosingCalculations(); } });
+renderPackageRows({ listElement: els.openingPackagesList, state: openingState, prefix: 'opening', onChange: () => { saveOpeningState(); updateOpeningCalculations(); } });
+renderPackageRows({ listElement: els.closingPackagesList, state: closingState, prefix: 'closing', onChange: () => { saveClosingState(); updateClosingCalculations(); } });
 els.pdvInput.value = formatInputMoney(pdvCents);
 updateOpeningCalculations();
 updateClosingCalculations();

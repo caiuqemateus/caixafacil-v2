@@ -18,7 +18,7 @@
       } catch {}
     </script>
     <title>Caixa Fácil · Abertura e fechamento</title>
-    <link rel="stylesheet" href="styles.css?v=17" />
+    <link rel="stylesheet" href="styles.css?v=21" />
     <link rel="stylesheet" href="extras.css?v=18" />
   </head>
   <body>
@@ -99,6 +99,17 @@
                 <span class="group-total" id="coins-total">R$ 0,00</span>
               </div>
               <div class="money-list" id="coins-list" aria-label="Contagem de moedas"></div>
+            </div>
+            <div class="money-group coin-packages-section" id="opening-packages-section" hidden>
+              <div class="group-heading">
+                <div class="group-icon coins-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-coins"></use></svg></div>
+                <div>
+                  <h3>Pacotes de moedas</h3>
+                  <p>Informe quantos pacotes fechados existem</p>
+                </div>
+                <span class="group-total" id="opening-packages-total">R$ 0,00</span>
+              </div>
+              <div class="money-list" id="opening-packages-list" aria-label="Contagem de pacotes de moedas"></div>
             </div>
           </div>
 
@@ -197,6 +208,17 @@
                 <span class="group-total" id="closing-coins-total">R$ 0,00</span>
               </div>
               <div class="money-list" id="closing-coins-list" aria-label="Contagem de moedas no fechamento"></div>
+            </div>
+            <div class="money-group coin-packages-section" id="closing-packages-section" hidden>
+              <div class="group-heading">
+                <div class="group-icon coins-icon" aria-hidden="true"><svg class="ui-icon"><use href="./icons.svg#icon-coins"></use></svg></div>
+                <div>
+                  <h3>Pacotes de moedas</h3>
+                  <p>Pacotes encontrados no fechamento</p>
+                </div>
+                <span class="group-total" id="closing-packages-total">R$ 0,00</span>
+              </div>
+              <div class="money-list" id="closing-packages-list" aria-label="Contagem de pacotes de moedas no fechamento"></div>
             </div>
           </div>
 
@@ -299,6 +321,10 @@
             <input id="quick-mode-toggle" type="checkbox" />
             <span><strong>Modo de contagem rápida</strong><small>Tela limpa, com foco nos valores.</small></span>
           </label>
+          <label class="quick-mode-setting" for="packages-toggle">
+            <input id="packages-toggle" type="checkbox" />
+            <span><strong>Contagem de pacotes de moedas</strong><small>Mostra um campo separado de pacotes na abertura e no fechamento.</small></span>
+          </label>
         </section>
         <section class="history-section extras-history" aria-labelledby="history-title">
           <div class="history-heading">
@@ -381,7 +407,7 @@
       <span>Criado por Sr.Reinã</span>
       <button class="footer-extras" type="button" data-view="extras">Extras</button>
     </footer>
-    <script src="app.js?v=19" defer></script>
+    <script src="app.js?v=21" defer></script>
     <script src="extras.js?v=14" defer></script>
   </body>
 </html>

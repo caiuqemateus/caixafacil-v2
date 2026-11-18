@@ -138,6 +138,9 @@ h1 em { color: var(--teal); font-style: normal; }
 .denomination { display: flex; flex-direction: column; gap: 2px; }
 .denomination strong { font-family: 'Space Grotesk', sans-serif; font-size: 17px; letter-spacing: -0.03em; }
 .denomination span { color: var(--ink-soft); font-size: 11px; }
+.coin-packages-section { border-style: dashed; }
+.package-row { min-height: 68px; }
+.package-stepper { width: 106px; }
 .quantity-control { display: flex; align-items: center; height: 38px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fbfcfa; }
 .step-button { width: 29px; height: 100%; padding: 0; border: 0; color: var(--teal); background: transparent; font-size: 20px; line-height: 1; }
 .step-button:hover { background: var(--teal-soft); }
